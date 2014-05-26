@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:title="Color" android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/menu_color"></item>
+<item android:title="Reset" android:id="@+id/menu_reset" android:icon="@android:drawable/ic_menu_delete"></item>
+<item android:title="Save" android:icon="@android:drawable/ic_menu_save" android:id="@+id/menu_save"></item>
+<item android:title="Exit" android:id="@+id/menu_exit" android:icon="@android:drawable/ic_menu_close_clear_cancel"></item>
+<item android:title="Network Off/On" android:id="@+id/menu_network" android:icon="@android:drawable/ic_menu_manage" ></item>
+<item android:title="Shapes" android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/menu_rectangle"></item>
+</menu>

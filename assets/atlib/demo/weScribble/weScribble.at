@@ -1,0 +1,205 @@
+/**
+ * AmbientTalk/2 Project
+ * (c) Programming Technology Lab, 2006 - 2014
+ * Authors: Soft Ambient Group
+ * 
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+deftype Painter;
+import /.at.lang.futures;
+enableFutures(false);
+
+def log(text) {
+  Android.Log.v("weScribble", text);
+};
+
+def makeWeScribble( myUserId := /.at.support.util.randomNumberBetween(0, 125)) {
+  // array of far references to other painters.
+  def otherPainters := [];
+  // HashMap of [userId, Path];
+  def paths := jlobby.java.util.HashMap.new();
+  def paths.each: closure {
+    def valit := paths.values().iterator();
+    while: { valit.hasNext() } do: {
+      closure(valit.next());
+    };
+  };
+
+  def gui;
+  def pub;
+
+  def localInterface := object: {
+
+    def touchStart(x, y) {
+      def msg := <-touchStart(myUserId, x, y, gui.getColor());
+      otherPainters.each: { |p| p <+ msg};
+    };
+
+    def touchMove(points) {
+      def msg := <-touchMove(myUserId, points);
+      otherPainters.each: { |p| p <+ msg};
+    };
+
+    def touchEnd(x, y) {
+      def msg := <-touchEnd(myUserId, x,y);
+      otherPainters.each: { |p| p <+ msg};
+    };
+
+    def reset() {
+      def msg := <-reset();
+      otherPainters.each: { |p| p <+ msg};
+    };
+    
+    def handshake(newGui) {
+      gui := newGui;
+    };
+    
+    def pub;
+    def disconnect() {
+	  pub := disconnect: remoteInterface;
+	};
+	
+	def reconnect(){
+	  pub.reconnect();
+	};
+	
+  };
+
+  def remoteInterface := object: {
+    def touchStart(other, x, y, color) {
+      def val := paths.get(other);
+      if: (val == nil) then: {
+          val := gui.createForeignPath(color);
+      } else:{
+        // check if we need to update color.
+        if: (color != val.getColor()) then: {
+          val.setColor(color);
+        };
+      };
+      val.rewind();
+      val.moveTo(x, y);
+      paths.put(other, val);
+      gui.addForeignPath(val);
+      gui.redrawCanvas();
+    };
+
+    def touchMove(other, points) {
+      def val := paths.get(other);
+      if: (val != nil) then: {
+        val.doOffset(points);
+        paths.put(other, val);
+        gui.redrawCanvas();
+      };
+    };
+
+    def touchEnd(other, x, y) {
+      def val := paths.get(other);
+      if: (val != nil) then: {
+        val.lineTo(x, y);
+        paths.put(other, val);
+        gui.endForeignPath(val);
+        gui.redrawCanvas();
+      }
+    };
+
+    def reset() {
+       paths.each: { |path|
+         path.reset();
+       };
+       gui.resetCanvas();
+    };
+    // added for section c)
+    def getUserId() {
+      myUserId;
+    };
+    // added for section b)
+    def merge(other, color, points) {
+      def val := paths.get(other);
+      if: (val == nil) then: {
+       val := gui.createForeignPath(color);
+       gui.addForeignPath(val);
+       val.doPath(points);
+       paths.put(other, val);
+         gui.redrawCanvas();
+         gui.endForeignPath(val);
+      };
+    };
+  }; //end-remoteInterface
+
+  def discoveredPainter(ref){
+     otherPainters := otherPainters + [ref];
+  };
+  
+  def discoveredPainterSectionB(ref){
+     otherPainters := otherPainters + [ref];
+	 sendMergeMessage(ref);
+  };
+  
+  def sendMergeMessage(ref){ 
+	def pathPoints := gui.getMyPath().getAllPoints();
+	if: (pathPoints != nil) then:{
+	  ref<-merge( myUserId, gui.getColor(), pathPoints);
+	};
+  };
+  
+  def discoveredPainterSectionC(ref) {
+    def knownUser := otherPainters.contains(ref);
+	if: (! knownUser) then: {
+	  otherPainters := otherPainters + [ref];
+	  sendMergeMessage(ref);
+      // ask user id to be able to grey out/recolor upon disconnection.
+      when: ref<-getUserId()@FutureMessage becomes: { | id |
+        log("Discovered other painter:" +id + " : " +ref);
+	    whenever: ref disconnected: {
+	      log("Disconnected other painter:" +id + " : " +ref);
+	      def val := paths.get(id);
+	      if: (val != nil) then:{
+	        gui.grayOut(val);
+	        gui.redrawCanvas();
+	      };
+	    };
+	    whenever: ref reconnected: {
+	     log("Reconnected other painter:" +id + " : " +ref);
+	      def val := paths.get(id);
+	      if: (val != nil) then:{
+	        gui.recolor(val);
+	        gui.redrawCanvas();
+	      };
+	    };
+	  };
+	};   
+  };
+  
+  def goOnline() {
+	export: remoteInterface as: Painter;
+  	whenever: Painter discovered: { |ref|
+		log("Discovered other painter:" + ref);
+		discoveredPainterSectionC(ref);
+  	};
+  };
+  
+  gui := Android.parent.registerATApp(localInterface);
+  goOnline();
+};
+network.online;
+self;
