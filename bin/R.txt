@@ -6,6 +6,7 @@ int id lucky_color_message 0x7f070000
 int id lucky_color_view 0x7f070001
 int id menu_color 0x7f070002
 int id menu_exit 0x7f070005
+int id menu_line 0x7f070008
 int id menu_network 0x7f070006
 int id menu_rectangle 0x7f070007
 int id menu_reset 0x7f070003

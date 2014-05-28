@@ -35,9 +35,12 @@ import java.util.Vector;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -213,6 +216,12 @@ public class WeScribble extends Activity implements
 			  return true;
 		case R.id.menu_exit:
 			System.exit(1);
+			return true;
+		case R.id.menu_rectangle:
+			WeScribbleView.PREFERENCE_OBJECT = 1;
+			return true;
+		case R.id.menu_line:
+			WeScribbleView.PREFERENCE_OBJECT = 2;
 			return true;
 		}
 		return super.onOptionsItemSelected(item);

@@ -21,6 +21,7 @@ public final class R {
         public static final int lucky_color_view=0x7f070001;
         public static final int menu_color=0x7f070002;
         public static final int menu_exit=0x7f070005;
+        public static final int menu_line=0x7f070008;
         public static final int menu_network=0x7f070006;
         public static final int menu_rectangle=0x7f070007;
         public static final int menu_reset=0x7f070003;

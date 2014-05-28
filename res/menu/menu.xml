@@ -7,4 +7,5 @@
 <item android:title="Exit" android:id="@+id/menu_exit" android:icon="@android:drawable/ic_menu_close_clear_cancel"></item>
 <item android:title="Network Off/On" android:id="@+id/menu_network" android:icon="@android:drawable/ic_menu_manage" ></item>
 <item android:title="Shapes" android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/menu_rectangle"></item>
+<item android:title="Lines" android:icon="@android:drawable/ic_menu_preferences" android:id="@+id/menu_line"></item>
 </menu>
